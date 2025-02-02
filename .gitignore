@@ -1,0 +1,49 @@
+# Compila��o do Visual Studio
+bin/
+obj/
+out/
+*obj*
+bin
+.vs
+# Configura��es do usu�rio do Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Logs e tempor�rios
+*.log
+*.tlog
+*.cache
+*.pdb
+*.vsp
+*.vspx
+*.log
+*.scc
+*.orig
+*.git
+# Configura��o de pacotes NuGet
+*.nupkg
+.nuget/
+packages/
+project.lock.json
+project.assets.json
+
+# Arquivos gerados pelo Rider e Resharper
+.idea/
+*.sln.iml
+*.DotSettings.user
+
+# Arquivos do MacOS/Linux
+.DS_Store
+Thumbs.db
+
+# Certificados e credenciais
+*.pfx
+*.snk
+secrets.json
+
+# Configura��es do IIS e arquivos de publica��o
+PublishProfiles/
+app.publish/
