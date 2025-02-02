@@ -42,8 +42,6 @@ namespace IMDB_Crawler.Crawler.Core.Utils
                     return [];
                 }
 
-                ValidateCaptcha(driver);
-
                bool isNavegated = NavigateToRatings(driver);
                if(!isNavegated)
                 {
@@ -115,6 +113,8 @@ namespace IMDB_Crawler.Crawler.Core.Utils
         }
 
         static async Task<string> SolveCaptcha(IWebDriver driver) {
+
+            //deve-se por a api key do anticaptcha
             string apiKey = "SUA_API_KEY_ANTICAPTCHA";
             var captchaImage = driver.FindElement(By.XPath("//img[@alt='captcha']"));
 
@@ -128,10 +128,7 @@ namespace IMDB_Crawler.Crawler.Core.Utils
         }
         private async void ValidateCaptcha(IWebDriver driver)
         {
-            _logger.LogInformation("Verificando Captcha...");
-            TimeSpan timeout = TimeSpan.FromMinutes(1);
-            DateTime start = DateTime.Now;
-           
+            _logger.LogInformation("Verificando Captcha...");           
             if (!driver.FindElements(By.Name("cvf_captcha_captcha_token")).Any())
             {
                 _logger.LogInformation("Captcha não localizado, continuando a automação...");
