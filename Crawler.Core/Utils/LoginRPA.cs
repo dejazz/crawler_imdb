@@ -93,8 +93,12 @@ namespace IMDB_Crawler.Crawler.Core.Utils
             _logger.LogInformation("Verificando se realmente logou.");
 
             var errorLoginClass = driver.FindElements(By.Id("auth-error-message-box"));
+
+            //verifica se existe atributos html dos captchas de texto e imagem da amazon para o caso de erro de credenciais
             var errorLoginClassCaptcha = driver.FindElements(By.XPath("//img[@alt='captcha']"));
             var buttonPuzzle = driver.FindElements(By.XPath("//button[contains(text(), 'Start Puzzle')]"));
+
+            //verifica se não caiu na página de captcha da amazon para o caso de erro de credenciais
             string expectedUrlPart = "https://www.imdb.com/ap/cvf/request?arb";
             string currentUrl = driver.Url;
             if (currentUrl.Contains(expectedUrlPart)) { 
