@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Crawler_Data_Lawer.Crawler.Core.Utils;
+using Microsoft.Extensions.Logging;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
@@ -25,7 +26,7 @@ namespace IMDB_Crawler.Crawler.Core.Utils
             _logger = logger;
         }
 
-        public async Task<List<Cookie>> Login()
+        public List<Cookie> Login()
         {
             _logger.LogInformation("Iniciando o processo de login...");
             using var driver = InitializeDriver();
@@ -43,10 +44,10 @@ namespace IMDB_Crawler.Crawler.Core.Utils
 
                 ValidateCaptcha(driver);
 
-                bool isNavegated = NavigateToRatings(driver);
-                if (!isNavegated)
+               bool isNavegated = NavigateToRatings(driver);
+               if(!isNavegated)
                 {
-                    NavigateToRatings(driver);
+                    return [];
                 }
                 return CaptureCookies(driver);
             }
@@ -89,8 +90,19 @@ namespace IMDB_Crawler.Crawler.Core.Utils
 
         private bool CheckLoginError(IWebDriver driver)
         {
-            var errorLoginClass = driver.FindElements(By.ClassName("auth-error-message-box"));
-            if (errorLoginClass.Count > 0)
+            _logger.LogInformation("Verificando se realmente logou.");
+
+            var errorLoginClass = driver.FindElements(By.Id("auth-error-message-box"));
+            var errorLoginClassCaptcha = driver.FindElements(By.XPath("//img[@alt='captcha']"));
+            var buttonPuzzle = driver.FindElements(By.XPath("//button[contains(text(), 'Start Puzzle')]"));
+            string expectedUrlPart = "https://www.imdb.com/ap/cvf/request?arb";
+            string currentUrl = driver.Url;
+            if (currentUrl.Contains(expectedUrlPart)) { 
+                _logger.LogError("Usuário ou senha errados, favor tentar novamente.");
+                return true;
+            }
+            
+            if (errorLoginClass.Count > 0 || errorLoginClassCaptcha.Count > 0 || buttonPuzzle.Count > 0)
             {
                 _logger.LogError("Usuário ou senha errados, favor tentar novamente.");
                 return true;
@@ -98,47 +110,66 @@ namespace IMDB_Crawler.Crawler.Core.Utils
             return false;
         }
 
-        private void ValidateCaptcha(IWebDriver driver)
+        static async Task<string> SolveCaptcha(IWebDriver driver) {
+            string apiKey = "SUA_API_KEY_ANTICAPTCHA";
+            var captchaImage = driver.FindElement(By.XPath("//img[@alt='captcha']"));
+
+            string captchaUrl = captchaImage.GetAttribute("src");
+            string imageUrl = captchaUrl; // Link da imagem do captcha
+            Console.WriteLine($"imageUrl = {imageUrl}");
+            var solver = new AntiCaptchaSolver(apiKey);
+            string? result = await solver.SolveCaptchaFromUrlAsync(imageUrl);
+            Console.WriteLine(result != null ? $"Captcha resolvido: {result}" : "Falha ao resolver captcha.");
+            return result ?? "Captcha não resolvido";
+        }
+        private async void ValidateCaptcha(IWebDriver driver)
         {
             _logger.LogInformation("Verificando Captcha...");
             TimeSpan timeout = TimeSpan.FromMinutes(1);
             DateTime start = DateTime.Now;
-            while ((DateTime.Now - start) < timeout)
+           
+            if (!driver.FindElements(By.Name("cvf_captcha_captcha_token")).Any())
             {
-                if (!driver.FindElements(By.Name("cvf_captcha_captcha_token")).Any())
-                {
-                    _logger.LogInformation("Captcha não localizado, continuando a automação...");
-                
-                    break;
-                }
-                _logger.LogInformation("Captcha localizado, por favor o resolva :)");
-                Thread.Sleep(2000);
+                _logger.LogInformation("Captcha não localizado, continuando a automação...");
+                return;
             }
+            //chamando solução do captcha
+            await SolveCaptcha(driver);
+
+
         }
 
         private bool NavigateToRatings(IWebDriver driver)
         {
-            try
+            //loop pára retries em caso de erro
+            for(int i = 0; i < 10; i++)
             {
-                IWebElement listFavoriteButton = driver.FindElement(By.LinkText("Lista de favoritos"));
-                _logger.LogInformation("Achou lista de favoritos");
-                listFavoriteButton.Click();
-                _logger.LogInformation("Clicou na lista de favoritos");
-                Thread.Sleep(5000);
-                var elementMyClassificationButton = new WebDriverWait(driver, TimeSpan.FromSeconds(30))
-                    .Until(d => d.FindElement(By.XPath("//a[contains(@href, 'ratings')]")));
+                try
+                {
+                    _logger.LogInformation($"Tentativa {i+1}/10 de achar a lista de favoritos e classificações");
+                    
+                    //faz o goto para url de lista de usuario no next. Nesse caso o next internamente lê o ref e faz o direcionamento correto de acordo com as informações do usuário após logar
+                    driver.Navigate().GoToUrl("https://www.imdb.com/list/watchlist/?ref_=nv_usr_wl_all_0");
+                    Thread.Sleep(5000);
 
-                string hrefValue = elementMyClassificationButton.GetAttribute("href");
-                _logger.LogInformation($"Valor do href para classificações: {hrefValue}");
-                driver.Navigate().GoToUrl(hrefValue);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogInformation($"{ex}Erro ao encontrar pagina de classificação");
-                return false;
+                    var elementMyClassificationButton = new WebDriverWait(driver, TimeSpan.FromSeconds(30))
+                        .Until(d => d.FindElement(By.XPath("//a[contains(@href, 'ratings')]")));
+
+                    string hrefValue = elementMyClassificationButton.GetAttribute("href");
+                    _logger.LogInformation($"Valor do href para classificações: {hrefValue}");
+                    driver.Navigate().GoToUrl(hrefValue);
+
+                    _logger.LogInformation($"Entrou na página de classificações");
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogInformation($"{ex} \n Erro ao encontrar pagina de classificação. Tentando novamente");
+
+                }
 
             }
+            return false;
 
         }
 

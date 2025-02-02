@@ -18,9 +18,9 @@ namespace IMDB_Crawler.Crawler.Core.Models
     // Criação de uma classe concreta que implementa a interface ICrawlerResult
     public class CrawlerResult : ICrawlerResult
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         public int ReleaseYear { get; set; }
-        public string Director { get; set; }
+        public string Director { get; set; } = string.Empty;
         public double AverageRating { get; set; }
         public int NumberOfRatings { get; set; }
     }

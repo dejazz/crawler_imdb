@@ -50,11 +50,11 @@ namespace IMDB_Crawler.Crawler.Core
 
                             return [];
                         }
-                         string pageContent = await response.Content.ReadAsStringAsync();
+                        string pageContent = await response.Content.ReadAsStringAsync();
 
-                         // Usa o HtmlAgilityPack para processar o HTML
-                         JObject jsonData = HTMLHelper.ExtractJsonFromScript(pageContent, "application/ld+json");
-                         List<CrawlerResult> responseCrawlerResult = await ProcessMoviesAsync(jsonData);
+                        // Usa o HtmlAgilityPack para processar o HTML pois o json que o frontend consome volta no fim do html de resposta
+                        JObject jsonData = HTMLHelper.ExtractJsonFromScript(pageContent, "application/ld+json");
+                        List<CrawlerResult> responseCrawlerResult = await ProcessMoviesAsync(jsonData);
                         return responseCrawlerResult;
 
                     }
@@ -81,7 +81,7 @@ namespace IMDB_Crawler.Crawler.Core
             string director = String.Empty;
             int releaseYear = 0;
             //for para retries por instabilidade no frontend
-            for (int i = 0; i < 5 ; i++)
+            for (int i = 0; i < 5; i++)
             {
                 try
                 {
@@ -104,26 +104,36 @@ namespace IMDB_Crawler.Crawler.Core
                         {
                             string pageContent = await response.Content.ReadAsStringAsync();
 
-                            // Usando o HTMLHelper para processar o conteúdo HTML em que o json de renderização do site está.
+                            // Usa o HtmlAgilityPack para processar o HTML pois o json que o frontend consome volta no fim do html de resposta
                             JObject jsonDataDirector = HTMLHelper.ExtractJsonFromScript(pageContent, "application/ld+json");
                             JObject jsonDataYearRelease = HTMLHelper.ExtractJsonFromScript(pageContent, "application/json");
                             if (jsonDataDirector != null && jsonDataYearRelease != null)
                             {
                                 var directorList = new List<string>();
-                                // Loop sobre os elementos do array "director" para casos de filmes com mais de um diretor
-                                foreach (var directorObj in jsonDataDirector["director"])
+                                if (jsonDataDirector["director"] is JArray directorArray)
                                 {
-                                    // Adiciona o nome do diretor, caso exista
-                                    var directorName = directorObj["name"]?.ToString() ?? "";
-                                    if (!string.IsNullOrEmpty(directorName))
+
+                                    foreach (var directorObj in directorArray)
                                     {
-                                        directorList.Add(directorName);
+                                        // Adiciona o nome do diretor, caso exista
+                                        var directorName = directorObj["name"]?.ToString() ?? "";
+                                        if (!string.IsNullOrEmpty(directorName))
+                                        {
+                                            directorList.Add(directorName);
+                                        }
                                     }
                                 }
 
+
+
                                 // Junta os nomes dos diretores com vírgula
                                 director = string.Join(",", directorList);
-                                string datePublished = jsonDataYearRelease["props"]["pageProps"]["aboveTheFoldData"]["releaseYear"]["year"].ToString();
+                                string datePublished = string.Empty;
+                                var releaseYearNode = jsonDataYearRelease["props"]?["pageProps"]?["aboveTheFoldData"]?["releaseYear"]?["year"];
+                                if (releaseYearNode != null)
+                                {
+                                    datePublished = releaseYearNode.ToString();
+                                }
                                 releaseYear = int.Parse(datePublished);
                                 _logger.LogInformation("Diretor encontrado: {Director}", director);
                                 return new MovieInfo
@@ -164,7 +174,18 @@ namespace IMDB_Crawler.Crawler.Core
         {
             // Parseando o conteúdo JSON
             List<CrawlerResult> crawlerResults = new List<CrawlerResult>();
-            JArray items = (JArray)jsonContent["itemListElement"];
+            JArray items = jsonContent["itemListElement"] as JArray ?? new JArray();
+
+            if (jsonContent["itemListElement"] is JArray array)
+            {
+                items = array;
+            }
+            if (items == null)
+            {
+                _logger.LogWarning("A chave 'itemListElement' não foi encontrada ou não contém um array válido.");
+                items = new JArray(); // Garantir que items seja um array vazio caso a chave seja nula ou inválida
+            }
+
             var limitedItems = items.Take(20).ToList();
             Console.WriteLine($"Total Filmes {limitedItems.Count}");
 
@@ -172,25 +193,41 @@ namespace IMDB_Crawler.Crawler.Core
             {
                 // Extraindo os dados de cada filme
                 var movieItem = items[i]["item"];
-                string alternateName = movieItem["alternateName"]?.ToString() ?? "";
-                double rating = movieItem["aggregateRating"]?["ratingValue"]?.ToObject<double>() ?? 0.0;
-                int ratingCount = movieItem["aggregateRating"]?["ratingCount"]?.ToObject<int>() ?? 0;
-                string url = movieItem["url"]?.ToString() ?? "";
-                var moveExtrasInfos = await ExtractMovieInfo(url);
-                string director = moveExtrasInfos.Director;
-                int YearPublished = moveExtrasInfos.ReleaseYear;
 
-                var crawlerResult = new CrawlerResult
-                {   
-                    Name = alternateName,
-                    ReleaseYear = YearPublished,
-                    Director = director,
-                    AverageRating = rating,
-                    NumberOfRatings = ratingCount
-                };
+                // Verificar se movieItem não é nulo antes de acessar suas chaves
+                if (movieItem != null)
+                {
+                    string alternateName = movieItem["alternateName"]?.ToString() ?? "";
+                    double rating = movieItem["aggregateRating"]?["ratingValue"]?.ToObject<double>() ?? 0.0;
+                    int ratingCount = movieItem["aggregateRating"]?["ratingCount"]?.ToObject<int>() ?? 0;
+                    string url = movieItem["url"]?.ToString() ?? "";
 
-                crawlerResults.Add(crawlerResult);
-                // Adicione os filmes à sua lista ou faça outro processamento aqui
+                    // Evitar erro de null
+                    if (string.IsNullOrEmpty(url))
+                    {
+                        _logger.LogWarning("URL não encontrada para o filme.");
+                        continue; // Ignorar este item se a URL estiver ausente
+                    }
+
+                    var moveExtrasInfos = await ExtractMovieInfo(url);
+                    string director = moveExtrasInfos.Director;
+                    int YearPublished = moveExtrasInfos.ReleaseYear;
+
+                    var crawlerResult = new CrawlerResult
+                    {
+                        Name = alternateName,
+                        ReleaseYear = YearPublished,
+                        Director = director,
+                        AverageRating = rating,
+                        NumberOfRatings = ratingCount
+                    };
+
+                    crawlerResults.Add(crawlerResult);
+                }
+                else
+                {
+                    _logger.LogError("O item do filme na posição {Index} é nulo.", i);
+                }
             }
             return crawlerResults;
         }
