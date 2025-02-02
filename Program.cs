@@ -56,7 +56,7 @@ class Program
     {
         string username = string.Empty;
         string password = string.Empty;
-        Console.WriteLine("Digite as credênciais da usa conta no IMDB ");
+        Console.WriteLine("Digite as credenciais da usa conta no IMDB ");
         while (string.IsNullOrEmpty(username))
         {
             Console.Write("Digite seu email: ");
