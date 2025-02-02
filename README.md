@@ -16,7 +16,7 @@ cd crawler_imdb
 ---
 
 ### 2. **Instalar Dependências**
-Este projeto é baseado no .NET, então você precisa restaurar as dependências e construir o projeto.
+Este projeto é baseado no .NET 8, então você precisa restaurar as dependências e construir o projeto, além de ter o .NET 8 instalado.
 
 Execute os seguintes comandos no terminal dentro da pasta do projeto:
 
@@ -43,6 +43,11 @@ dotnet run
 ```
 
 Ao executar o comando, o sistema solicitar suas credenciais de login (e-mail e senha) no IMDb. Caso o login seja realizado com sucesso, o crawler irá buscar informações sobre os 20 filmes mais populares e salvar os dados no formato CSV.
+
+Conta para os testes:
+
+email:  schneider8991@outlook.com
+senha: Teste@123
 
 Exemplo de solicitação de email:
 
