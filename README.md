@@ -20,8 +20,9 @@ Execute os seguintes comandos no terminal dentro da pasta do projeto:
 ```
 dotnet restore
 dotnet build
-Esses comandos irão restaurar as dependências e compilar o código.
 ```
+Importante: Esses comandos irão restaurar as dependências e compilar o código.
+
 ### 3. **Configurar Credenciais
 Antes de rodar o projeto, você precisa fornecer o e-mail e senha da sua conta no IMDb para que o sistema possa realizar o login e coletar os dados. O código pedir que você insira essas informações no terminal quando você rodar o projeto.
 
