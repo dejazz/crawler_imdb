@@ -39,7 +39,7 @@ Ao executar o comando, o sistema solicitar suas credenciais de login (e-mail e s
 Exemplo de solicitação de email:
 
 ```
-Digite as credênciais de usa conta no IMDB
+Digite as credênciais da sua conta no IMDB
 Digite seu email: seu@email.com
 ```
 
