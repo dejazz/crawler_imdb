@@ -1,6 +1,6 @@
 # IMDb Crawler e RPA
 
-Este é um projeto de **crawler** em **.NET**, que acessa o IMDb, faz login e coleta dados sobre os 20 filmes mais populares. Ele utiliza o **Selenium** para fazer o login e coleta as informações sobre os filmes, que são então exportadas para um arquivo CSV.
+Este é um projeto de **crawler** em **.NET**, que acessa o IMDb, faz login e coleta dados sobre os 20 melhores filmes. Ele utiliza o **Selenium** para fazer o login e **requisições com Csharp** para coletar as informações sobre os filmes, que são então exportadas para um arquivo CSV.
 
 ## Passos para Rodar o Projeto
 
@@ -26,7 +26,7 @@ Esses comandos irão restaurar as dependências e compilar o código.
 ### 3. **Configurar Credenciais
 Antes de rodar o projeto, você precisa fornecer o e-mail e senha da sua conta no IMDb para que o sistema possa realizar o login e coletar os dados. O código pedir que você insira essas informações no terminal quando você rodar o projeto.
 
-O processo de login ocorre dentro do m�todo LoginAttempts na classe Program que chama a classe LoginRPA feita com Selenium. As credenciais de login serão solicitadas após a execução do programa.
+O processo de login ocorre dentro do método LoginAttempts na classe Program que chama a classe LoginRPA feita com Selenium. As credenciais de login serão solicitadas após a execução do programa.
 
 ### 4. **Rodar o Projeto
 Para rodar o projeto, execute o seguinte comando:
