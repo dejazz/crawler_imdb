@@ -18,7 +18,6 @@ Este projeto é baseado no .NET, então você precisa restaurar as dependências
 Execute os seguintes comandos no terminal dentro da pasta do projeto:
 
 ```
-bash
 dotnet restore
 dotnet build
 Esses comandos irão restaurar as dependências e compilar o código.
@@ -32,12 +31,23 @@ O processo de login ocorre dentro do método LoginAttempts na classe Program que
 Para rodar o projeto, execute o seguinte comando:
 
 ```
-bash
 dotnet run
 ```
 
 Ao executar o comando, o sistema solicitar suas credenciais de login (e-mail e senha) no IMDb. Caso o login seja realizado com sucesso, o crawler irá buscar informações sobre os 20 filmes mais populares e salvar os dados no formato CSV.
 
+Exemplo de solicitação de email:
+
+```
+Digite as credênciais de usa conta no IMDB
+Digite seu email: seu@email.com
+```
+
+Exemplo de solicitação de senha:
+
+```
+Digite sua senha: suaSenhaAqui
+```
 Importante: Se o login falhar (por exemplo, se as credenciais estiverem erradas), o sistema irá solicitar que você insira novamente as informações de login.
 
 ### 5. **CSV Gerado
