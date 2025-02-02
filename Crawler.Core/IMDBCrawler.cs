@@ -80,7 +80,7 @@ namespace IMDB_Crawler.Crawler.Core
             string _userAgent = userAgentManager.GetRandomUserAgent();
             string director = String.Empty;
             int releaseYear = 0;
-            //for para retries por instabilidade no frontend
+            //for para retries por instabilidade no backend
             for (int i = 0; i < 5; i++)
             {
                 try
@@ -124,9 +124,6 @@ namespace IMDB_Crawler.Crawler.Core
                                     }
                                 }
 
-
-
-                                // Junta os nomes dos diretores com vírgula
                                 director = string.Join(",", directorList);
                                 string datePublished = string.Empty;
                                 var releaseYearNode = jsonDataYearRelease["props"]?["pageProps"]?["aboveTheFoldData"]?["releaseYear"]?["year"];
@@ -209,6 +206,7 @@ namespace IMDB_Crawler.Crawler.Core
                         continue; // Ignorar este item se a URL estiver ausente
                     }
 
+                    //Faz a extração dos dados de Diretor e ano de lançamento pela url obtida na lista de melhores filmes
                     var moveExtrasInfos = await ExtractMovieInfo(url);
                     string director = moveExtrasInfos.Director;
                     int YearPublished = moveExtrasInfos.ReleaseYear;
