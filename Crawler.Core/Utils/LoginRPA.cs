@@ -159,7 +159,9 @@ namespace IMDB_Crawler.Crawler.Core.Utils
                     string hrefValue = elementMyClassificationButton.GetAttribute("href");
                     _logger.LogInformation($"Valor do href para classificações: {hrefValue}");
                     driver.Navigate().GoToUrl(hrefValue);
-
+                    
+                    //sleep para comprovar rpa na tela de classificação
+                    Thread.Sleep(10000);
                     _logger.LogInformation($"Entrou na página de classificações");
                     return true;
                 }
