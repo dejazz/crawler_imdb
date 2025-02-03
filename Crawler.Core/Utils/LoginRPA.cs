@@ -3,11 +3,6 @@ using Microsoft.Extensions.Logging;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace IMDB_Crawler.Crawler.Core.Utils
 {
@@ -35,8 +30,12 @@ namespace IMDB_Crawler.Crawler.Core.Utils
             {
                 driver.Navigate().GoToUrl(_loginUrl);
 
-                PerformLogin(driver);
+                bool isLogged = PerformLogin(driver);
 
+                if(!isLogged)
+                {
+                    return [];
+                }
                 if (CheckLoginError(driver))
                 {
                     return [];
@@ -51,7 +50,7 @@ namespace IMDB_Crawler.Crawler.Core.Utils
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Erro durante o processo de login: {ex.Message}");
+                Logger.LogError(ex, $"Erro durante o processo de login: {ex.Message}");
                 throw;
             }
             finally
@@ -69,21 +68,30 @@ namespace IMDB_Crawler.Crawler.Core.Utils
             return driver;
         }
 
-        private void PerformLogin(IWebDriver driver)
+        private bool PerformLogin(IWebDriver driver)
         {
-            _logger.LogInformation("Acessando a página de login...");
-            driver.FindElement(By.Id("signin-options"));
-            driver.FindElement(By.LinkText("Sign in with IMDb")).Click();
-            _logger.LogInformation("Clicou no login com a conta do IMDB");
+            try
+            {
+                _logger.LogInformation("Acessando a página de login...");
+                driver.FindElement(By.Id("signin-options"));
+                driver.FindElement(By.LinkText("Sign in with IMDb")).Click();
+                _logger.LogInformation("Clicou no login com a conta do IMDB");
 
-            driver.FindElement(By.Id("ap_email")).SendKeys(_username);
-            _logger.LogInformation("Digitou email");
+                driver.FindElement(By.Id("ap_email")).SendKeys(_username);
+                _logger.LogInformation("Digitou email");
 
-            driver.FindElement(By.Id("ap_password")).SendKeys(_password);
-            _logger.LogInformation("Digitou senha");
+                driver.FindElement(By.Id("ap_password")).SendKeys(_password);
+                _logger.LogInformation("Digitou senha");
 
-            driver.FindElement(By.Id("signInSubmit")).Click();
-            _logger.LogInformation("Clicou em Logar");
+                driver.FindElement(By.Id("signInSubmit")).Click();
+                _logger.LogInformation("Clicou em Logar");
+                return true;
+            }
+            catch (Exception e){
+                Logger.LogError(e, "Erro ao preencher login");
+                return false;
+            }
+          
         }
 
         private bool CheckLoginError(IWebDriver driver)
@@ -143,11 +151,11 @@ namespace IMDB_Crawler.Crawler.Core.Utils
         private bool NavigateToRatings(IWebDriver driver)
         {
             //loop pára retries em caso de erro
-            for(int i = 0; i < 10; i++)
+            for(int attempts = 0; attempts < 10; attempts++)
             {
                 try
                 {
-                    _logger.LogInformation($"Tentativa {i+1}/10 de achar a lista de favoritos e classificações");
+                    _logger.LogInformation($"Tentativa {attempts+1}/10 de achar a lista de favoritos e classificações");
                     
                     //faz o goto para url de lista de usuario no next. Nesse caso o next internamente lê o ref e faz o direcionamento correto de acordo com as informações do usuário após logar
                     driver.Navigate().GoToUrl("https://www.imdb.com/list/watchlist/?ref_=nv_usr_wl_all_0");

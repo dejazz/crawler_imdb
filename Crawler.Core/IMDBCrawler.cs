@@ -1,10 +1,8 @@
 ﻿using Crawler_Data_Lawer.Crawler.Core.Utils;
-using HtmlAgilityPack;
 using IMDB_Crawler.Crawler.Core.Models;
 using Newtonsoft.Json.Linq;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Headers;
-using OpenQA.Selenium.DevTools;
 using Crawler_Data_Lawer.Crawler.Core.Models;
 
 namespace IMDB_Crawler.Crawler.Core
@@ -13,9 +11,10 @@ namespace IMDB_Crawler.Crawler.Core
     {
         private readonly List<OpenQA.Selenium.Cookie> _cookies = cookies;
         private readonly ILogger<IMDBCrawler> _logger = logger;
+        private readonly AppConfig _config = AppConfig.Load();
 
-        // Método para extrair os 250 filmes mais bem avaliados
-        public async Task<List<CrawlerResult>> ExtractTop20MoviesAsync()
+        // Método para extrair os filmes mais bem avaliados
+        public async Task<List<CrawlerResult>> ExtractTopMovies()
         {
             List<CrawlerResult> topMovies = new List<CrawlerResult>();
             string url = "https://www.imdb.com/chart/top/?ref_=nv_mv_250";
@@ -62,11 +61,11 @@ namespace IMDB_Crawler.Crawler.Core
             }
             catch (HttpRequestException e)
             {
-                _logger.LogError("Erro de requisição HTTP: {Message}", e);
+                Logger.LogError(e,$"Erro de requisição HTTP: {e}");
             }
             catch (Exception e)
             {
-                _logger.LogError("Ocorreu um erro inesperado: {Message}", e.Message);
+                Logger.LogError(e, $"Ocorreu um erro inesperado: {e}");
             }
 
             return topMovies;
@@ -81,7 +80,7 @@ namespace IMDB_Crawler.Crawler.Core
             string director = String.Empty;
             int releaseYear = 0;
             //for para retries por instabilidade no backend
-            for (int i = 0; i < 5; i++)
+            for (int attempts = 0; attempts < 5; attempts++)
             {
                 try
                 {
@@ -152,10 +151,12 @@ namespace IMDB_Crawler.Crawler.Core
                 }
                 catch (HttpRequestException e)
                 {
+                    Logger.LogError(e, $"Erro de requisição HTTP ao buscar diretor.");
                     _logger.LogError("Erro de requisição HTTP ao buscar diretor: {Message}", e.Message);
                 }
                 catch (Exception e)
                 {
+                    Logger.LogError(e, $"Ocorreu um erro inesperado ao buscar o diretor.");
                     _logger.LogError("Ocorreu um erro inesperado ao buscar o diretor: {Message}", e.Message);
                 }
             }
@@ -169,65 +170,74 @@ namespace IMDB_Crawler.Crawler.Core
         }
         public async Task<List<CrawlerResult>> ProcessMoviesAsync(JObject jsonContent)
         {
-            // Parseando o conteúdo JSON
-            List<CrawlerResult> crawlerResults = new List<CrawlerResult>();
-            JArray items = jsonContent["itemListElement"] as JArray ?? new JArray();
-
-            if (jsonContent["itemListElement"] is JArray array)
+            try
             {
-                items = array;
-            }
-            if (items == null)
-            {
-                _logger.LogWarning("A chave 'itemListElement' não foi encontrada ou não contém um array válido.");
-                items = new JArray(); // Garantir que items seja um array vazio caso a chave seja nula ou inválida
-            }
+                // Parseando o conteúdo JSON
+                List<CrawlerResult> crawlerResults = new List<CrawlerResult>();
+                JArray items = jsonContent["itemListElement"] as JArray ?? new JArray();
 
-            var limitedItems = items.Take(20).ToList();
-            Console.WriteLine($"Total Filmes {limitedItems.Count}");
-
-            for (int i = 0; i < limitedItems.Count; i++)
-            {
-                // Extraindo os dados de cada filme
-                var movieItem = items[i]["item"];
-
-                // Verificar se movieItem não é nulo antes de acessar suas chaves
-                if (movieItem != null)
+                if (jsonContent["itemListElement"] is JArray array)
                 {
-                    string alternateName = movieItem["alternateName"]?.ToString() ?? "";
-                    double rating = movieItem["aggregateRating"]?["ratingValue"]?.ToObject<double>() ?? 0.0;
-                    int ratingCount = movieItem["aggregateRating"]?["ratingCount"]?.ToObject<int>() ?? 0;
-                    string url = movieItem["url"]?.ToString() ?? "";
+                    items = array;
+                }
+                if (items == null)
+                {
+                    _logger.LogWarning("A chave 'itemListElement' não foi encontrada ou não contém um array válido.");
+                    items = new JArray(); // Garantir que items seja um array vazio caso a chave seja nula ou inválida
+                }
 
-                    // Evitar erro de null
-                    if (string.IsNullOrEmpty(url))
+                var limitedItems = items.Take(_config.MaxItems).ToList();
+                Console.WriteLine($"Total Filmes {limitedItems.Count}");
+
+                for (int i = 0; i < limitedItems.Count; i++)
+                {
+                    // Extraindo os dados de cada filme
+                    var movieItem = items[i]["item"];
+
+                    // Verificar se movieItem não é nulo antes de acessar suas chaves
+                    if (movieItem != null)
                     {
-                        _logger.LogWarning("URL não encontrada para o filme.");
-                        continue; // Ignorar este item se a URL estiver ausente
+                        string alternateName = movieItem["alternateName"]?.ToString() ?? "";
+                        double rating = movieItem["aggregateRating"]?["ratingValue"]?.ToObject<double>() ?? 0.0;
+                        int ratingCount = movieItem["aggregateRating"]?["ratingCount"]?.ToObject<int>() ?? 0;
+                        string url = movieItem["url"]?.ToString() ?? "";
+
+                        // Evitar erro de null
+                        if (string.IsNullOrEmpty(url))
+                        {
+                            _logger.LogWarning("URL não encontrada para o filme.");
+                            continue; // Ignorar este item se a URL estiver ausente
+                        }
+
+                        //Faz a extração dos dados de Diretor e ano de lançamento pela url obtida na lista de melhores filmes
+                        var moveExtrasInfos = await ExtractMovieInfo(url);
+                        string director = moveExtrasInfos.Director;
+                        int YearPublished = moveExtrasInfos.ReleaseYear;
+
+                        var crawlerResult = new CrawlerResult
+                        {
+                            Name = alternateName,
+                            ReleaseYear = YearPublished,
+                            Director = director,
+                            AverageRating = rating,
+                            NumberOfRatings = ratingCount
+                        };
+
+                        crawlerResults.Add(crawlerResult);
                     }
-
-                    //Faz a extração dos dados de Diretor e ano de lançamento pela url obtida na lista de melhores filmes
-                    var moveExtrasInfos = await ExtractMovieInfo(url);
-                    string director = moveExtrasInfos.Director;
-                    int YearPublished = moveExtrasInfos.ReleaseYear;
-
-                    var crawlerResult = new CrawlerResult
+                    else
                     {
-                        Name = alternateName,
-                        ReleaseYear = YearPublished,
-                        Director = director,
-                        AverageRating = rating,
-                        NumberOfRatings = ratingCount
-                    };
-
-                    crawlerResults.Add(crawlerResult);
+                        _logger.LogError("O item do filme na posição {Index} é nulo.", i);
+                    }
                 }
-                else
-                {
-                    _logger.LogError("O item do filme na posição {Index} é nulo.", i);
-                }
+                return crawlerResults;
             }
-            return crawlerResults;
+            catch (Exception  ex)
+            {
+                Logger.LogError(ex, $"Ocorreu um erro inesperado processar os filmes.");
+                return [];
+            }
+           
         }
     }
 }
