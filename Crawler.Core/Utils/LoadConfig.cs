@@ -13,7 +13,7 @@ public class AppConfig
 
     public static AppConfig Load()
     {
-        string projectRoot = Directory.GetParent(Directory.GetParent(Directory.GetParent(Directory.GetCurrentDirectory()).FullName).FullName).FullName;
+        string projectRoot = GetProjectRoot(Directory.GetCurrentDirectory());
 
         // Caminho completo para o arquivo de configuração
         string configFilePath = Path.Combine(projectRoot, "config.json");
@@ -25,5 +25,17 @@ public class AppConfig
 
         string json = File.ReadAllText(configFilePath);
         return JsonSerializer.Deserialize<AppConfig>(json) ?? new AppConfig();
+    }
+    public static string GetProjectRoot(string startDirectory)
+    {
+        var currentDir = new DirectoryInfo(startDirectory);
+
+        // Loop até encontrar a raiz do projeto (onde o arquivo .csproj ou outro marcador esteja)
+        while (currentDir != null && !File.Exists(Path.Combine(currentDir.FullName, "config.json")))
+        {
+            currentDir = currentDir.Parent;
+        }
+
+        return currentDir?.FullName; // Retorna o caminho da raiz do projeto ou null se não encontrado
     }
 }
