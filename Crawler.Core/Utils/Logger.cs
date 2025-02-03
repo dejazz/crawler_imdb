@@ -9,7 +9,7 @@
         public static void LogError(Exception ex, string message)
         {
             // Formatação da mensagem de log com detalhes da exceção e a mensagem adicional
-            string logMessage = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] ERRO: {ex.Message}\nStackTrace: {ex.StackTrace}\nMensagem adicional: {message}\n";
+            string logMessage = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] ERRO: {ex.Message}\nStackTrace: {ex.StackTrace}\nMensagem adicional: {message}";
             WriteLog(logMessage);
         }
 

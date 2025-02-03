@@ -1,10 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using IMDB_Crawler.Crawler.Core.Utils;
 using IMDB_Crawler.Crawler.Core.Models;
-
 using IMDB_Crawler.Crawler.Core;
-using Microsoft.Extensions.Logging.Console;
-using NLog;
+
 
 class Program
 {
@@ -31,24 +29,34 @@ class Program
             Console.WriteLine("Não obtivemos retorno de cookies, tentando novamente");
             cookies = LoginAttempts(loginUrl, loggerLogin);
         }
-        // Faz a extração dos dados
-        IMDBCrawler extractData = new IMDBCrawler(cookies, loggerCrawler);
-        List<CrawlerResult> extratedData = await extractData.ExtractTopMovies();
-        foreach (var movie in extratedData)
-        {
-            Console.WriteLine($"Nome: {movie.Name}");
-            Console.WriteLine($"Ano de Lançamento: {movie.ReleaseYear}");
-            Console.WriteLine($"Diretor: {movie.Director}");
-            Console.WriteLine($"Avaliação Média: {movie.AverageRating}");
-            Console.WriteLine($"Número de Avaliações: {movie.NumberOfRatings}");
-            Console.WriteLine(new string('-', 50));
+
+        if(cookies.Count > 1) {
+
+            IMDBCrawler extractData = new IMDBCrawler(cookies, loggerCrawler);
+            List<CrawlerResult> extratedData = await extractData.ExtractTopMovies();
+            foreach (var movie in extratedData)
+            {
+                Console.WriteLine($"Nome: {movie.Name}");
+                Console.WriteLine($"Ano de Lançamento: {movie.ReleaseYear}");
+                Console.WriteLine($"Diretor: {movie.Director}");
+                Console.WriteLine($"Avaliação Média: {movie.AverageRating}");
+                Console.WriteLine($"Número de Avaliações: {movie.NumberOfRatings}");
+                Console.WriteLine(new string('-', 50));
+            }
+
+            // Criar instância do CsvExporter
+            var csvExporter = new CsvExporter();
+
+            // Exportar os dados para CSV
+            csvExporter.SaveToCsv(extratedData);
+
+
         }
+        else
+        {
+            Console.WriteLine("Não obtivemos retorno de cookies, Encerrando o bot");
 
-        // Criar instância do CsvExporter
-        var csvExporter = new CsvExporter();
-
-        // Exportar os dados para CSV
-        csvExporter.SaveToCsv(extratedData);
+        }
 
     }
 
