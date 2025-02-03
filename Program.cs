@@ -33,7 +33,7 @@ class Program
         }
         // Faz a extração dos dados
         IMDBCrawler extractData = new IMDBCrawler(cookies, loggerCrawler);
-        List<CrawlerResult> extratedData = await extractData.ExtractTop20MoviesAsync();
+        List<CrawlerResult> extratedData = await extractData.ExtractTopMovies();
         foreach (var movie in extratedData)
         {
             Console.WriteLine($"Nome: {movie.Name}");
@@ -41,7 +41,7 @@ class Program
             Console.WriteLine($"Diretor: {movie.Director}");
             Console.WriteLine($"Avaliação Média: {movie.AverageRating}");
             Console.WriteLine($"Número de Avaliações: {movie.NumberOfRatings}");
-            Console.WriteLine(new string('-', 50)); // Separador
+            Console.WriteLine(new string('-', 50));
         }
 
         // Criar instância do CsvExporter
@@ -54,28 +54,11 @@ class Program
 
     static List<OpenQA.Selenium.Cookie> LoginAttempts(string loginUrl, ILogger<LoginRPA> logger)
     {
-        string username = string.Empty;
-        string password = string.Empty;
-        Console.WriteLine("Digite as credenciais da usa conta no IMDB ");
-        while (string.IsNullOrEmpty(username))
-        {
-            Console.Write("Digite seu email: ");
-            username = Console.ReadLine() ?? "";
-            if (string.IsNullOrEmpty(username))
-            {
-                Console.WriteLine("O email é obrigatório. Por favor, insira o email.");
-            }
-        }
+        AppConfig _config = AppConfig.Load();
 
-        while (string.IsNullOrEmpty(password))
-        {
-            Console.Write("Digite sua senha: ");
-            password = Console.ReadLine() ?? "";
-            if (string.IsNullOrEmpty(password))
-            {
-                Console.WriteLine("A senha é obrigatória. Por favor, insira a senha.");
-            }
-        }
+        string username = _config.EmailLogin;
+        string password = _config.PasswordLogin;
+        
 
         // Cria uma instância do LoginRPA com as credenciais fornecidas
         var loginRPA = new LoginRPA(loginUrl, username, password, logger);
