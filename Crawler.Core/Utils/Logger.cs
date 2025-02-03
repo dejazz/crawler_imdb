@@ -23,7 +23,7 @@
         // Método privado que escreve a mensagem no arquivo de log
         private static void WriteLog(string message)
         {
-            string projectRoot = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName;
+            string projectRoot = GetProjectRoot(Directory.GetCurrentDirectory());
             string LogFilePath = Path.Combine(projectRoot, "logs.txt");
             try
             {
@@ -35,5 +35,17 @@
                 Console.WriteLine($"Erro ao escrever no log: {ex.Message}");
             }
         }
+        public static string GetProjectRoot(string startDirectory)
+    {
+        var currentDir = new DirectoryInfo(startDirectory);
+
+        // Loop até encontrar a raiz do projeto (onde o arquivo .csproj ou outro marcador esteja)
+        while (currentDir != null && !File.Exists(Path.Combine(currentDir.FullName, "config.json")))
+        {
+            currentDir = currentDir.Parent;
+        }
+
+        return currentDir?.FullName; // Retorna o caminho da raiz do projeto ou null se não encontrado
+    }
     }
 }

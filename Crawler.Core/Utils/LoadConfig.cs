@@ -26,6 +26,7 @@ public class AppConfig
         string json = File.ReadAllText(configFilePath);
         return JsonSerializer.Deserialize<AppConfig>(json) ?? new AppConfig();
     }
+    
     public static string GetProjectRoot(string startDirectory)
     {
         var currentDir = new DirectoryInfo(startDirectory);
