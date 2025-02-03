@@ -1,0 +1,11 @@
+[2025-02-02 21:13:04] ERRO: no such element: Unable to locate element: {"method":"css selector","selector":"#ap_passwordddd"}
+  (Session info: chrome=132.0.6834.160); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+StackTrace:    at OpenQA.Selenium.WebDriver.UnpackAndThrowOnError(Response errorResponse, String commandToExecute)
+   at OpenQA.Selenium.WebDriver.ExecuteAsync(String driverCommandToExecute, Dictionary`2 parameters)
+   at OpenQA.Selenium.WebDriver.Execute(String driverCommandToExecute, Dictionary`2 parameters)
+   at OpenQA.Selenium.WebDriver.FindElement(String mechanism, String value)
+   at OpenQA.Selenium.By.<.ctor>b__11_0(ISearchContext context)
+   at OpenQA.Selenium.By.FindElement(ISearchContext context)
+   at OpenQA.Selenium.WebDriver.FindElement(By by)
+   at IMDB_Crawler.Crawler.Core.Utils.LoginRPA.PerformLogin(IWebDriver driver) in C:\Users\schne\Documents\apps\Crawler Data Lawer\Crawler.Core\Utils\LoginRPA.cs:line 83
+Mensagem adicional: Erro ao preencher login
