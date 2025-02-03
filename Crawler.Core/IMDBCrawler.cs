@@ -197,11 +197,16 @@ namespace IMDB_Crawler.Crawler.Core
                     // Verificar se movieItem não é nulo antes de acessar suas chaves
                     if (movieItem != null)
                     {
+                        string name = movieItem["name"]?.ToString().ToString() ?? "";
                         string alternateName = movieItem["alternateName"]?.ToString() ?? "";
                         double rating = movieItem["aggregateRating"]?["ratingValue"]?.ToObject<double>() ?? 0.0;
                         int ratingCount = movieItem["aggregateRating"]?["ratingCount"]?.ToObject<int>() ?? 0;
                         string url = movieItem["url"]?.ToString() ?? "";
 
+                        if (string.IsNullOrEmpty(alternateName))
+                        {
+                            alternateName = name;
+                        }
                         // Evitar erro de null
                         if (string.IsNullOrEmpty(url))
                         {
