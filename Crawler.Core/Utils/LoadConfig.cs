@@ -13,8 +13,11 @@ public class AppConfig
 
     public static AppConfig Load()
     {
-        string projectRoot = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName;
+        string projectRoot = Directory.GetParent(Directory.GetParent(Directory.GetParent(Directory.GetCurrentDirectory()).FullName).FullName).FullName;
+
+        // Caminho completo para o arquivo de configuração
         string configFilePath = Path.Combine(projectRoot, "config.json");
+        // Caminho completo para o arquivo de configuração
         if (!File.Exists(configFilePath))
         {
             throw new FileNotFoundException($"Arquivo de configuração '{configFilePath}' não encontrado.");
