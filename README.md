@@ -44,10 +44,7 @@ dotnet run
 
 Ao executar o comando, o sistema solicitar suas credenciais de login (e-mail e senha) no IMDb. Caso o login seja realizado com sucesso, o crawler irá buscar informações sobre os 20 filmes mais populares e salvar os dados no formato CSV.
 
-Conta para os testes:
-
-email:  schneider8991@outlook.com
-senha: Teste@123
+No projeto existe um arquivo config.json que está todas as configurações e credenciais para que o robô seja executado.
 
 Exemplo de solicitação de email:
 
