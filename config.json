@@ -1,0 +1,6 @@
+{
+    "MaxItems": 20,
+    "CaptchaKey": "KEY_ANTI_CAPTCHA",
+    "EmailLogin": "fakeemail@fake.com",
+    "PasswordLogin":  "Teste@123"
+}
