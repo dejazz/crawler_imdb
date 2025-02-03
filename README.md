@@ -44,20 +44,8 @@ dotnet run
 
 Ao executar o comando, o sistema solicitar suas credenciais de login (e-mail e senha) no IMDb. Caso o login seja realizado com sucesso, o crawler irá buscar informações sobre os 20 filmes mais populares e salvar os dados no formato CSV.
 
-No projeto existe um arquivo config.json que está todas as configurações e credenciais para que o robô seja executado.
+No projeto existe um arquivo config.json que está todas as configurações e credenciais para que o robô seja executado. Antes de executar o robô o email deve ser trocado para schneider8991@outlook.com
 
-Exemplo de solicitação de email:
-
-```
-Digite as credênciais da sua conta no IMDB
-Digite seu email: seu@email.com
-```
-
-Exemplo de solicitação de senha:
-
-```
-Digite sua senha: suaSenhaAqui
-```
 Importante: Se o login falhar (por exemplo, se as credenciais estiverem erradas), o sistema irá solicitar que você insira novamente as informações de login.
 
 ---
